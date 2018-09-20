@@ -7,7 +7,7 @@
 ;;; ----------------------------------------------------------------------
 ;;; Main loop. This loop ensures that handle_sample is called 1000 times.
 ;;; ----------------------------------------------------------------------
-	set r31,1000
+	set r31,100
 loop
 	call handle_sample
 
@@ -62,6 +62,10 @@ handle_sample
 	push r0
 	push r1
 
+	move r0,r31
+	nop
+	push r0
+
 		;;;  FIXME - You may want to save other registers here as well.
 		;;; (Alternatively, you might want to save less registers here in order
 		;;; to improve the performance if you can get away with it somehow...)
@@ -69,6 +73,10 @@ handle_sample
 	;;; Put sample into ring buffer
 	
 	call fir_kernel
+
+	pop r0
+	nop
+	move r31,r0
 
 	pop r1
 	pop r0
@@ -134,6 +142,7 @@ initfirkernel
 ;;; ----------------------------------------------------------------------
 	.code
 fir_kernel
+	
 
 	;; Set ringbuffer pointer wrap-around
 	set r1,top_ringbuffer
@@ -144,6 +153,10 @@ fir_kernel
 	nop
 	move step1,r1
 	move step0,r1
+
+	set r31,10
+fir_kernel_loop
+
 
 
 
@@ -211,6 +224,9 @@ FIR_loop
 	nop
 
 	out 0x11,r0		; Output a sample
+
+	add r31,-1
+	jump.ne fir_kernel_loop
 	ret
 	
 
