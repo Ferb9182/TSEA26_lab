@@ -28,6 +28,7 @@ loop
 ;;; filtering.
 ;;; ----------------------------------------------------------------------
 handle_sample
+	ret 
 	push r0
 	push r1
 
@@ -140,12 +141,13 @@ fir_kernel
 	nop
 	move ar1,r1
 
-	ld0 r1,(coefficients)
+	set r1,coefficients
 	nop
 	move ar0,r1
 
 	;; Store sample
-	st0 (current_location),r0
+	st1 (ar1),r0
+
 	;; Clear accumulator
 	clr acr0
 
@@ -153,28 +155,25 @@ fir_kernel
 		;; multiply sample by weight which is stored .coefficients
 	;; }
 
-	repeat FIR_loop,32
-	ld0 r1,(ar1++) ;; read current sample
-	ld0 r0,(ar0++) ;; Read current coeffient
-	macss acr0,r1,r0 ;; Multiply sample by weight and store in ar0
-	;; add ar0,ar0,1 ;; Increment current location
-	;; add ar1,ar1,1 ;; Increment current coefficient
-
-	set r1,top_ringbuffer ;; Store ring buffer top somewhere
-	move r0,ar1
-	cmp r1,r0 ;; Compare current pointer to ringbuffer top
-	jump.ne FIR_loop ;; Skip if they are not equal
-	ld0 r1,(ringbuffer) ;; Load the address of the ring buffer
-	nop
-	move ar1,r1 ;; Store in "current_location"
-FIR_loop
-	move r0,ar0
+	;; Set ringbuffer pointer wrap-around
 	set r1,top_ringbuffer
-	cmp r0,r1
-	jump.ne no_ring_change
-	set ar0,ringbuffer
-no_ring_change
+	set r0,ringbuffer
+	move top1,r1
+	move bot1,r0
+	set r1,1
+	nop
+	move step1,r1
+	move step0,r1
+	
+	repeat FIR_loop,31
+	convss acr0,(ar0++%),(ar1++%)
+FIR_loop
+	move r0,ar1
+	nop
 	st0 (current_location),r0
+	convss acr0,(ar0++%),(ar1++%)
+	nop
+	nop
 
 
 
@@ -201,7 +200,7 @@ no_ring_change
 
 	;; Hint: You may need some scaling in this instruction. Without scaling
 	;; this will move bit 31-16 into r0 (after saturation and rounding)
-	move r0,sat rnd acr0
+	move r0,sat rnd div2 acr0
 	nop
 
 	out 0x11,r0		; Output a sample
@@ -235,39 +234,38 @@ coefficients
 ;;; 
 ;;;  Hint: You might find it easy to use fprintf() in matlab to
 ;;;  create this part. (fprintf in matlab can handle vectors)
-
-	.df -0.001209
-	.df -0.001016
-	.df -0.000739
-	.df 0.000000
-	.df 0.001651
-	.df 0.004657
-	.df 0.009375
-	.df 0.015986
-	.df 0.024441
-	.df 0.034427
-	.df 0.045378
-	.df 0.056523
-	.df 0.066966
-	.df 0.075796
-	.df 0.082200
-	.df 0.085565
-	.df 0.085565
-	.df 0.082200
-	.df 0.075796
-	.df 0.066966
-	.df 0.056523
-	.df 0.045378
-	.df 0.034427
-	.df 0.024441
-	.df 0.015986
-	.df 0.009375
-	.df 0.004657
-	.df 0.001651
-	.df 0.000000
-	.df -0.000739
-	.df -0.001016
-	.df -0.001209
+	.dw 65378
+	.dw 65403
+	.dw 65440
+	.dw 0
+	.dw 216
+	.dw 610
+	.dw 1228
+	.dw 2095
+	.dw 3203
+	.dw 4512
+	.dw 5947
+	.dw 7408
+	.dw 8777
+	.dw 9934
+	.dw 10773
+	.dw 11215
+	.dw 11215
+	.dw 10773
+	.dw 9934
+	.dw 8777
+	.dw 7408
+	.dw 5947
+	.dw 4512
+	.dw 3203
+	.dw 2095
+	.dw 1228
+	.dw 610
+	.dw 216
+	.dw 0
+	.dw 65440
+	.dw 65403
+	.dw 65378
 	
 ;;; ----------------------------------------------------------------------
 ;;; Stack space
