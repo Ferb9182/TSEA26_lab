@@ -28,7 +28,7 @@ loop
 ;;; filtering.
 ;;; ----------------------------------------------------------------------
 handle_sample
-	ret 
+	; ret 
 	push r0
 	push r1
 
@@ -134,26 +134,6 @@ initfirkernel
 ;;; ----------------------------------------------------------------------
 	.code
 fir_kernel
-	;;; FIXME - You need to implement the rest of this function
-	in r0,0x10		; Read input sample -> r0
-	
-	ld0 r1,(current_location)
-	nop
-	move ar1,r1
-
-	set r1,coefficients
-	nop
-	move ar0,r1
-
-	;; Store sample
-	st1 (ar1),r0
-
-	;; Clear accumulator
-	clr acr0
-
-	;; for each sample {
-		;; multiply sample by weight which is stored .coefficients
-	;; }
 
 	;; Set ringbuffer pointer wrap-around
 	set r1,top_ringbuffer
@@ -164,6 +144,33 @@ fir_kernel
 	nop
 	move step1,r1
 	move step0,r1
+
+
+
+	ld0 r1,(current_location)
+	nop
+	move ar1,r1
+
+	;;; FIXME - You need to implement the rest of this function
+	in r0,0x10		; Read input sample -> r0	
+	nop
+	;; Store sample
+	st1 (ar1),r0
+
+
+	set r1,coefficients
+	nop
+	move ar0,r1
+
+
+
+	;; Clear accumulator
+	clr acr0
+
+	;; for each sample {
+		;; multiply sample by weight which is stored .coefficients
+	;; }
+
 	
 	repeat FIR_loop,31
 	convss acr0,(ar0++%),(ar1++%)
