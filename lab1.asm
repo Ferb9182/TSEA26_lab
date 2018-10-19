@@ -155,14 +155,16 @@ fir_kernel
 	move step0,r1
 
 	set r31,10
-fir_kernel_loop
-
-
 
 
 	ld0 r1,(current_location)
 	nop
+	
+fir_kernel_loop
 	move ar1,r1
+
+
+
 
 	;;; FIXME - You need to implement the rest of this function
 	in r0,0x10		; Read input sample -> r0	
@@ -188,9 +190,9 @@ fir_kernel_loop
 	repeat FIR_loop,31
 	convss acr0,(ar0++%),(ar1++%)
 FIR_loop
-	move r0,ar1
+	move r1,ar1
 	nop
-	st0 (current_location),r0
+	
 	convss acr0,(ar0++%),(ar1++%)
 	nop
 	nop
@@ -220,13 +222,14 @@ FIR_loop
 
 	;; Hint: You may need some scaling in this instruction. Without scaling
 	;; this will move bit 31-16 into r0 (after saturation and rounding)
-	move r0,sat rnd div2 acr0
+	move r0,sat rnd div4 acr0
 	nop
 
 	out 0x11,r0		; Output a sample
 
 	add r31,-1
 	jump.ne fir_kernel_loop
+	st0 (current_location),r1
 	ret
 	
 
@@ -257,38 +260,38 @@ coefficients
 ;;; 
 ;;;  Hint: You might find it easy to use fprintf() in matlab to
 ;;;  create this part. (fprintf in matlab can handle vectors)
-	.dw 65378
-	.dw 65403
-	.dw 65440
-	.dw 0
-	.dw 216
-	.dw 610
-	.dw 1228
-	.dw 2095
-	.dw 3203
-	.dw 4512
-	.dw 5947
-	.dw 7408
-	.dw 8777
-	.dw 9934
-	.dw 10773
-	.dw 11215
-	.dw 11215
-	.dw 10773
-	.dw 9934
-	.dw 8777
-	.dw 7408
-	.dw 5947
-	.dw 4512
-	.dw 3203
-	.dw 2095
-	.dw 1228
-	.dw 610
-	.dw 216
-	.dw 0
-	.dw 65440
-	.dw 65403
-	.dw 65378
+	.dw 0xfec4
+	.dw 0xfef6
+	.dw 0xff3f
+	.dw 0x0000
+	.dw 0x01b0
+	.dw 0x04c4
+	.dw 0x0999
+	.dw 0x105e
+	.dw 0x1906
+	.dw 0x2340
+	.dw 0x2e77
+	.dw 0x39e0
+	.dw 0x4492
+	.dw 0x4d9d
+	.dw 0x542b
+	.dw 0x579e
+	.dw 0x579e
+	.dw 0x542b
+	.dw 0x4d9d
+	.dw 0x4492
+	.dw 0x39e0
+	.dw 0x2e77
+	.dw 0x2340
+	.dw 0x1906
+	.dw 0x105e
+	.dw 0x0999
+	.dw 0x04c4
+	.dw 0x01b0
+	.dw 0x0000
+	.dw 0xff3f
+	.dw 0xfef6
+	.dw 0xfec4
 	
 ;;; ----------------------------------------------------------------------
 ;;; Stack space
